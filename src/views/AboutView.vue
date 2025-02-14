@@ -2,7 +2,8 @@
 import {
   // inject,
   nextTick, onMounted, ref, type Component, type Ref } from 'vue';
-  import PropsComponent from '@/components/PropsComponent.vue'
+  import PropsComponent from '@/components/PropsComponent.vue';
+  import ReactiveComponent from '@/components/ReactiveComponent.vue';
 
 // const globalProvide = inject('globalProvide')
 
@@ -43,11 +44,14 @@ const comRef:Ref<Component | null> = ref(null);
 
 </script>
 <template>
-
+  <h1>响应式</h1>
+<ReactiveComponent />
     <!-- <MyGlobalComponent v-my-global-directive:myArg.myModifier1.myModifier2="myValue" myattrs="3"/> -->
   <!-- <div v-my-global-directive:myArg.myModifier1.myModifier2="myValue">dom元素</div> -->
    <!-- <span>{{ globalProvide }}</span> -->
+    <h1>nextTick</h1>
    <div class="test" ref="divRef">about {{ myValue }}</div>
+   <h1>props & setup</h1>
    <PropsComponent ref="comRef" :name="name" :age="30" gender="女" :address="address"/>
 </template>
 
