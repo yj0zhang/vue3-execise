@@ -12,3 +12,10 @@ app.use(createPinia())
 app.use(router)
 
 app.mount('#app')
+
+// setTimeout(() => {
+//   app.unmount()
+// }, 5000)
+// app.onUnmount((...restArgs) => {
+//   console.log('app unmounted', restArgs);
+// })
