@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, onWatcherCleanup, reactive, readonly, ref, watch, watchEffect, type ComputedRef, type Reactive, type Ref } from 'vue';
+import { computed, onWatcherCleanup, reactive, readonly, ref, toRef, toRefs, watch, watchEffect, type ComputedRef, type Reactive, type Ref } from 'vue';
 
 // ref
 const count:Ref<number> = ref(0);
@@ -81,6 +81,54 @@ watch(original, (/** newVal,oldVal,onCleanup */) => {
   once: false
 })
 
+interface IObj {
+  name: string;
+  address: {
+    n:number
+  }
+}
+
+const obj4:Reactive<IObj> = reactive({name:'1', address:{n:1}})
+const obj5:Ref<IObj> = ref({name:'1', address:{n:1}})
+// eslint-disable-next-line prefer-const
+let {name: name4, address: address4} = obj4
+// eslint-disable-next-line prefer-const
+let {name: name5, address: address5} = obj5.value
+setTimeout(() => {
+  name4 = '2';
+  address4.n = 2;
+  name5 = '2';
+  address5.n = 2;
+}, 1000);
+
+
+/**
+ * isRef 判断一个变量是否ref类型
+ * unref 等价于 isRef(val) ? val.value : val
+ * toRef 返回一个ref，与原数据关联，使用返回的ref get或set，实际上操作的是原数据
+ * toValue 在unref的基础上，增加了对getter的规范化，会把ref，普通值和getter规范化为值
+ * toRefs 将reactive对象，转换成普通对象，这个普通对象的每个属性是对reactive对象属性的ref
+ */
+
+const obj6 = reactive({name: 'ss'})
+const refToObje6name = toRef(obj6, 'name');
+console.log('refToObje6name',refToObje6name.value)
+const refToObje6nameGetter = toRef(() => obj6.name);
+console.log('refToObje6nameGetter',refToObje6nameGetter.value)
+// const refToObje6nameGetterSetter = toRef({
+//   get() {
+//     return obj6.name
+//   },
+//   set(v: string) {
+//     obj6.name = v
+//   }
+// });
+// console.log('refToObje6nameGetterSetter',refToObje6nameGetterSetter.value)
+
+const obj7 = reactive({name:'2',age:20});
+const obj7Refs = toRefs(obj7);
+console.log('obj7Refs的每个属性，与obj7的属性关联了',obj7Refs.age.value === obj7.age)
+console.log('obj7Refs的每个属性，与obj7的属性关联了',obj7Refs.name.value === obj7.name)
 </script>
 
 <template>
@@ -93,7 +141,13 @@ watch(original, (/** newVal,oldVal,onCleanup */) => {
     <button @click="tripleCount = 30"> changeCount </button>
   </div>
   <div>
-    <h2>reactive</h2>
+    <h2>reactive&ref解构</h2>
+    reactive 解构的基础类型名字：{{ name4 }} <br>
+    reactive 解构的对象：{{ address4.n }} <br>
+    obj4，原始对象的基础类型name没变: {{ JSON.stringify(obj4) }} <br>
+    ref 解构的基础类型名字：{{ name5 }} <br>
+    ref 解构的对象：{{ address5.n }} <br>
+    obj5，原始对象的基础类型name没变: {{ JSON.stringify(obj5) }} <br>
   </div>
 </template>
 
