@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-import { computed, onWatcherCleanup, reactive, readonly, ref, toRef, toRefs, watch, watchEffect, type ComputedRef, type Reactive, type Ref } from 'vue';
+import { useDebouncedRef } from '@/hooks/useDebounceRef';
+import { computed, effect, effectScope, getCurrentScope, isReactive, onScopeDispose, onWatcherCleanup, reactive, readonly, ref, shallowReactive, shallowRef, toRaw, toRef, toRefs, triggerRef, watch, watchEffect, type ComputedRef, type Reactive, type Ref } from 'vue';
 
 // ref
 const count:Ref<number> = ref(0);
@@ -129,6 +130,80 @@ const obj7 = reactive({name:'2',age:20});
 const obj7Refs = toRefs(obj7);
 console.log('obj7Refs的每个属性，与obj7的属性关联了',obj7Refs.age.value === obj7.age)
 console.log('obj7Refs的每个属性，与obj7的属性关联了',obj7Refs.name.value === obj7.name)
+
+
+
+const obj8 = shallowRef({count: 3});
+console.log('shallow ref',obj8.value.count)
+effect(() => {
+  console.log('shallow ref obj8的effect触发了',obj8.value)
+})
+// 这样修改会直接触发上面的effect
+obj8.value = {count :5}
+console.log('shallow ref 修改value',obj8)
+//这样修改，不会触发上面的effect，因为这样不会触发obj8的set方法
+obj8.value.count = 4
+//get的时候会取到最新值
+console.log('shallow ref 修改属性',obj8.value)
+//但是可以用triggerRef方法直接触发
+console.log('shallow ref 使用triggerRef直接触发obj8的effect')
+triggerRef(obj8)
+
+
+//customRef，使用customRef实现在设置text时，实现防抖，修改text后500毫秒后才生效
+//可以绑定在input上，实现用户输入防抖
+const text = useDebouncedRef('hello',500);
+console.log(text)
+
+//shallowReactive
+const obj9 = shallowReactive({
+  foo: 1,
+  nested: {
+    bar: 2
+  }
+})
+effect(() => {
+  console.log('obj9的副作用被触发了',JSON.stringify(obj9))
+})
+// 更改状态自身的属性是响应式的
+obj9.foo = 3
+// ...但下层嵌套对象不会被转为响应式
+isReactive(obj9.nested) // false
+// 不是响应式的，不会触发副作用
+obj9.nested.bar = 3
+console.log('obj9.nested.bar不是响应式的，不会触发副作用，但读取时可以取到最新值',JSON.stringify(obj9))
+//shallowReadonly 只有对象的第一层属性不可更改；同时如果属性值为ref，不会被自动解包
+// toRaw返回Vue创建的代理的原始对象，包括reactive,readonly,shallowReactive,shallowReadonly
+// toRaw也可以返回ref.value的原始对象
+const obj10 = {foo:1}
+const obj10Ref = ref(obj10)
+console.log('返回ref.value的原始对象：',toRaw(obj10Ref.value) === obj10)
+//markRaw 将一个对象标记为不可代理
+
+//effectScope
+const scope = effectScope();
+const obj11 = ref(2)
+obj11.value = 3;
+
+scope.run(() => {
+  console.log('effectScope run', obj11.value)
+  const doubled = computed(() => obj11.value * 2)
+  watch(doubled, () => console.log('effectScope run double',doubled.value))
+  watchEffect(() => console.log('effectScope run Count: ', doubled.value))
+  onScopeDispose(() => {
+    console.log('effectScope scope disposed')
+  })
+})
+const curscope1 = getCurrentScope()
+obj11.value = 4
+setTimeout(() => {
+  obj11.value ++
+  console.log('effectScope',curscope1 === getCurrentScope())
+  curscope1?.stop()
+}, 1000);
+
+// stop后，副作用解除，意味着当前run函数之后的同步修改不会再产生副作用
+scope.stop()
 </script>
 
 <template>
