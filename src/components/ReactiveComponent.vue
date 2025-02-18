@@ -204,6 +204,17 @@ setTimeout(() => {
 
 // stop后，副作用解除，意味着当前run函数之后的同步修改不会再产生副作用
 scope.stop()
+
+
+
+const obj12:Reactive<{address?: {n:number[]}}> = reactive({})
+obj12.address = {n:[]};
+effect(() => {
+  console.log('reactive对象添加新的对象属性，这个对象属性是响应式的吗？不是',obj12.address?.n)
+})
+setTimeout(() => {
+  obj12.address?.n.push(1);
+}, 1000);
 </script>
 
 <template>
